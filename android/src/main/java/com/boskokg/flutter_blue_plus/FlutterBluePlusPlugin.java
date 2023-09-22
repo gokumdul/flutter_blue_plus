@@ -530,23 +530,28 @@ public class FlutterBluePlusPlugin implements
 
                 case "disconnect":
                 {
-                    String remoteId = (String) call.arguments;
+                    try{
+                        String remoteId = (String) call.arguments;
 
-                    // already disconnected?
-                    BluetoothGatt gatt = mConnectedDevices.get(remoteId);
-                    if (gatt == null) {
-                        log(LogLevel.DEBUG, "[FBP-Android] already disconnected");
-                        result.success(1);  // no work to do
-                        return;
+                        // already disconnected?
+                        BluetoothGatt gatt = mConnectedDevices.get(remoteId);
+                        if (gatt == null) {
+                            log(LogLevel.DEBUG, "[FBP-Android] already disconnected");
+                            result.success(1);  // no work to do
+                            return;
+                        }
+
+                        // calling disconnect explicitly turns off autoconnect.
+                        // this allows gatt resources to be reclaimed
+                        mAutoConnect.put(remoteId, false);
+                    
+                        gatt.disconnect();
+
+                        result.success(0);
+                    } catch (Exception e) {
+                        result.error("hana, disconnect exception", e.getMessage(), e);
                     }
-
-                    // calling disconnect explicitly turns off autoconnect.
-                    // this allows gatt resources to be reclaimed
-                    mAutoConnect.put(remoteId, false);
-                
-                    gatt.disconnect();
-
-                    result.success(0);
+                   
                     break;
                 }
 
